@@ -5,7 +5,6 @@ on:
     types: [opened]
 
 permissions:
-  models: read
   issues: write
 
 jobs:
@@ -13,12 +12,30 @@ jobs:
     name: AI Issue Completeness
     runs-on: ubuntu-latest
     steps:
+      - name: Check Copilot authentication
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: |
+          if [ -z "$COPILOT_GITHUB_TOKEN" ]; then
+            echo "::error::Set the COPILOT_PAT repository secret to a token with Copilot Requests permission."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
       - name: Analyze issue with AI
         id: ai-response
-        uses: actions/ai-inference@v2
+        uses: actions/ai-inference@v3
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max-tokens: 1000
+          model: ''
           system-prompt: |
             You are a GitHub issue assistant. Your task is to analyze newly opened issues for completeness.
 
