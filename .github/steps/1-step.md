@@ -1,5 +1,12 @@
 ## Step 1: Introduction to AI Actions
 
+> [!IMPORTANT]
+> GitHub Models was retired on July 30, 2026. The GitHub Models instructions
+> below are outdated. This repository's `Ask AI` workflow uses Copilot CLI
+> instead. Create a fine-grained personal access token with the **Copilot
+> Requests** permission and save it as the `COPILOT_PAT` Actions repository
+> secret before running the workflow.
+
 In this exercise, you'll learn to integrate AI capabilities directly into your GitHub Actions workflows using GitHub Models. Let's start with understanding the key concepts and then straight to creating your first AI-powered workflow!
 
 ### 📖 Theory: GitHub Models in Actions
