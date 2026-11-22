@@ -46,11 +46,10 @@ We'll follow the three-step pattern: gathering context from issue events, proces
        types: [opened]
 
    permissions:
-     models: read
      issues: write
    ```
 
-   This workflow will run whenever a new issue is opened with the permissions to access GitHub Models and to write new issue comments.
+   This workflow runs whenever a new issue is opened and can write issue comments. AI inference uses the `COPILOT_PAT` repository secret configured in Step 1.
 
    > ❗ **Caution:** Copy the contents as provided, as this exact workflow name (`Issue Completeness`) is required to progress to next steps of this exercise.
 
@@ -66,12 +65,30 @@ We'll follow the three-step pattern: gathering context from issue events, proces
        name: AI Issue Completeness
        runs-on: ubuntu-latest
        steps:
+         - name: Check Copilot authentication
+           env:
+             COPILOT_GITHUB_TOKEN: {% raw %}${{ secrets.COPILOT_PAT }}{% endraw %}
+           run: |
+             if [ -z "$COPILOT_GITHUB_TOKEN" ]; then
+               echo "::error::Set the COPILOT_PAT repository secret to a token with Copilot Requests permission."
+               exit 1
+             fi
+
+         - name: Set up Node.js
+           uses: actions/setup-node@v6
+           with:
+             node-version: '24'
+
+         - name: Install Copilot CLI
+           run: npm install -g @github/copilot
+
          - name: Analyze issue with AI
            id: ai-response
-           uses: actions/ai-inference@v2
+           uses: actions/ai-inference@v3
+           env:
+             COPILOT_GITHUB_TOKEN: {% raw %}${{ secrets.COPILOT_PAT }}{% endraw %}
            with:
-             token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
-             max-tokens: 1000
+             model: ''
              system-prompt: |
                You are a GitHub issue assistant. Your task is to analyze newly opened issues for completeness.
 
@@ -89,7 +106,7 @@ We'll follow the three-step pattern: gathering context from issue events, proces
                ---
    ```
 
-   > 🪧 **Note:** The **`max-tokens`** parameter is used to control the maximum length of the response. Low values could mean the response is cut off halway.
+   > 🪧 **Note:** An empty **`model`** lets Copilot CLI choose its default model.
 
 1. Now let's add a step that will post the issue comment using the `ai-inference` `response` output:
 
@@ -141,6 +158,7 @@ We'll follow the three-step pattern: gathering context from issue events, proces
   - the workflow is in `.github/workflows` directory
   - the trigger is `issues: [opened]` and you created a new issue (not edited an existing one).
 - If the workflow failed to parse, check that the YAML indentation is correct and that all required fields are present.
+- If authentication fails, check that the `COPILOT_PAT` repository secret has the Copilot Requests permission.
 - If the workflow failed for any reason, e.g because it was incomplete or incorrectly formatted, you will need to fix it and then open another issue to trigger the workflow again.
 
 </details>
